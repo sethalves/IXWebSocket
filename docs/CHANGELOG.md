@@ -1,6 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+=======
+## [6.2.4] - 2019-09-28
+
+- ixcobra / fix crash in CobraConnection::publishNext when the queue is empty + handle CobraConnection_PublishMode_Batch in CobraMetricsThreadedPublisher
+
 ## [6.2.3] - 2019-09-21
 
 - Fix crash in the Linux unittest in the HTTP client code, in Socket::readBytes
