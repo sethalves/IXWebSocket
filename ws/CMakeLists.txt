@@ -29,6 +29,8 @@ if (UNIX)
   set( STATSD_CLIENT_SOURCES ../third_party/statsd-client-cpp/src/statsd_client.cpp)
 endif()
 
+target_compile_definitions(ws PRIVATE SPDLOG_COMPILED_LIB)
+
 add_executable(ws 
   ../third_party/msgpack11/msgpack11.cpp
   ../third_party/jsoncpp/jsoncpp.cpp

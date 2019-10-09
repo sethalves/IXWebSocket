@@ -69,6 +69,8 @@ endif()
 
 add_executable(ixwebsocket_unittest ${SOURCES})
 
+target_compile_definitions(ixwebsocket_unittest PRIVATE SPDLOG_COMPILED_LIB)
+
 if (MAC)
   add_sanitizers(ixwebsocket_unittest)
 endif()
