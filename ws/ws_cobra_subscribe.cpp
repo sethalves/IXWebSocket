@@ -27,7 +27,14 @@ namespace ix
             appkey, endpoint, rolename, rolesecret, ix::WebSocketPerMessageDeflateOptions(true));
         conn.connect();
 
-        Json::FastWriter jsonWriter;
+        auto serializeJson = [](const rapidjson::Value& document) -> std::string
+        {
+            rapidjson::StringBuffer buffer;
+            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+            document.Accept(writer);
+
+            return buffer.GetString();
+        };
 
         // Display incoming messages
         std::atomic<int> msgPerSeconds(0);
@@ -48,7 +55,7 @@ namespace ix
         std::thread t(timer);
 
         conn.setEventCallback(
-            [&conn, &channel, &jsonWriter, &filter, &msgCount, &msgPerSeconds, &quiet](
+            [&conn, &channel, &serializeJson, &filter, &msgCount, &msgPerSeconds, &quiet](
                 ix::CobraConnectionEventType eventType,
                 const std::string& errMsg,
                 const ix::WebSocketHttpHeaders& headers,
@@ -69,10 +76,10 @@ namespace ix
                     conn.subscribe(
                         channel,
                         filter,
-                        [&jsonWriter, &quiet, &msgPerSeconds, &msgCount](const Json::Value& msg) {
+                        [&serializeJson, &quiet, &msgPerSeconds, &msgCount](const rapidjson::Value& msg) {
                             if (!quiet)
                             {
-                                std::cout << jsonWriter.write(msg) << std::endl;
+                                std::cerr << serializeJson(msg) << std::endl;
                             }
 
                             msgPerSeconds++;

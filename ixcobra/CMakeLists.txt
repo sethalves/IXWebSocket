@@ -5,8 +5,8 @@
 
 set (IXCOBRA_SOURCES
     ixcobra/IXCobraConnection.cpp
-    ixcobra/IXCobraMetricsThreadedPublisher.cpp
-    ixcobra/IXCobraMetricsPublisher.cpp
+    # ixcobra/IXCobraMetricsThreadedPublisher.cpp
+    # ixcobra/IXCobraMetricsPublisher.cpp
 )
 
 set (IXCOBRA_HEADERS
@@ -25,6 +25,8 @@ set(IXCOBRA_INCLUDE_DIRS
     ..
     ../ixcore
     ../ixcrypto
-    ../third_party)
+    ../third_party
+    ../third_party/rapidjson/include)
 
+target_compile_definitions( ixcobra PUBLIC RAPIDJSON_HAS_STDSTRING=1 )
 target_include_directories( ixcobra PUBLIC ${IXCOBRA_INCLUDE_DIRS} )

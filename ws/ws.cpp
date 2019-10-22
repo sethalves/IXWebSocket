@@ -379,6 +379,7 @@ int main(int argc, char** argv)
         ret = ix::ws_cobra_subscribe_main(
             appkey, endpoint, rolename, rolesecret, channel, filter, quiet);
     }
+#if 0
     else if (app.got_subcommand("cobra_publish"))
     {
         ret = ix::ws_cobra_publish_main(appkey, endpoint, rolename, rolesecret, channel, path);
@@ -407,6 +408,7 @@ int main(int argc, char** argv)
         ret = ix::ws_cobra_to_sentry_main(
             appkey, endpoint, rolename, rolesecret, channel, filter, dsn, verbose, strict, jobs);
     }
+#endif
     else if (app.got_subcommand("snake"))
     {
         ret = ix::ws_snake_main(

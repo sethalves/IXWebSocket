@@ -8,7 +8,11 @@
 
 #include <ixwebsocket/IXWebSocketHttpHeaders.h>
 #include <ixwebsocket/IXWebSocketPerMessageDeflateOptions.h>
-#include <jsoncpp/json/json.h>
+
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
+
 #include <memory>
 #include <mutex>
 #include <queue>
@@ -38,7 +42,7 @@ namespace ix
         CobraConnection_PublishMode_Batch = 1
     };
 
-    using SubscriptionCallback = std::function<void(const Json::Value&)>;
+    using SubscriptionCallback = std::function<void(const rapidjson::Value&)>;
     using EventCallback = std::function<void(CobraConnectionEventType,
                                              const std::string&,
                                              const WebSocketHttpHeaders&,
@@ -85,16 +89,17 @@ namespace ix
         /// Publish a message to a channel
         ///
         /// No-op if the connection is not established
-        MsgId publish(const Json::Value& channels, const Json::Value& msg);
+        MsgId publish(const std::vector<std::string>& channels,
+                      rapidjson::Value& msg);
 
         // Subscribe to a channel, and execute a callback when an incoming
         // message arrives.
-        void subscribe(const std::string& channel,
+        bool subscribe(const std::string& channel,
                        const std::string& filter = std::string(),
                        SubscriptionCallback cb = nullptr);
 
         /// Unsubscribe from a channel
-        void unsubscribe(const std::string& channel);
+        bool unsubscribe(const std::string& channel);
 
         /// Close the connection
         void disconnect();
@@ -124,8 +129,8 @@ namespace ix
         /// Prepare a message for transmission
         /// (update the pdu, compute a msgId, serialize json to a string)
         std::pair<CobraConnection::MsgId, std::string> prePublish(
-            const Json::Value& channels,
-            const Json::Value& msg,
+            const std::vector<std::string>& channels,
+            rapidjson::Value& msg,
             bool addToQueue);
 
         /// Attempt to send next message from the internal queue
@@ -136,18 +141,18 @@ namespace ix
 
     private:
         bool sendHandshakeMessage();
-        bool handleHandshakeResponse(const Json::Value& data);
+        bool handleHandshakeResponse(const rapidjson::Document& data);
         bool sendAuthMessage(const std::string& nonce);
-        bool handleSubscriptionData(const Json::Value& pdu);
-        bool handleSubscriptionResponse(const Json::Value& pdu);
-        bool handleUnsubscriptionResponse(const Json::Value& pdu);
-        bool handlePublishResponse(const Json::Value& pdu);
+        bool handleSubscriptionData(const rapidjson::Document& pdu);
+        bool handleSubscriptionResponse(const rapidjson::Document& pdu);
+        bool handleUnsubscriptionResponse(const rapidjson::Document& pdu);
+        bool handlePublishResponse(const rapidjson::Document& pdu);
 
         void initWebSocketOnMessageCallback();
 
         bool publishMessage(const std::string& serializedJson);
         void enqueue(const std::string& msg);
-        std::string serializeJson(const Json::Value& pdu);
+        std::string serializeJson(const rapidjson::Document& pdu);
 
         /// Invoke the traffic tracker callback
         static void invokeTrafficTrackerCallback(size_t size, bool incoming);
@@ -180,10 +185,8 @@ namespace ix
         std::atomic<bool> _authenticated;
 
         // Keep some objects around
-        Json::Value _body;
-        Json::Value _pdu;
-        Json::FastWriter _jsonWriter;
-        mutable std::mutex _jsonWriterMutex;
+        rapidjson::Value _body;
+        rapidjson::Document _pdu;
         std::mutex _prePublishMutex;
 
         /// Traffic tracker callback

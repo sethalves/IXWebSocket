@@ -14,6 +14,7 @@
 #include <cassert>
 #include <cstring>
 #include <iostream>
+#include <sstream>
 
 
 namespace ix
@@ -30,7 +31,10 @@ namespace ix
         _eventCallback(nullptr),
         _id(1)
     {
-        _pdu["action"] = "rtm/publish";
+        _pdu.SetObject();
+        _pdu.AddMember("action",
+                       "rtm/publish",
+                       _pdu.GetAllocator());
 
         _webSocket->addSubProtocol("json");
         initWebSocketOnMessageCallback();
@@ -138,25 +142,24 @@ namespace ix
                 }
                 else if (msg->type == ix::WebSocketMessageType::Message)
                 {
-                    Json::Value data;
-                    Json::Reader reader;
-                    if (!reader.parse(msg->str, data))
+                    rapidjson::Document document;
+                    if (document.Parse(msg->str.c_str()).HasParseError())
                     {
                         invokeErrorCallback("Invalid json", msg->str);
                         return;
                     }
 
-                    if (!data.isMember("action"))
+                    if (!document.HasMember("action"))
                     {
                         invokeErrorCallback("Missing action", msg->str);
                         return;
                     }
 
-                    auto action = data["action"].asString();
+                    std::string action = document["action"].GetString();
 
                     if (action == "auth/handshake/ok")
                     {
-                        if (!handleHandshakeResponse(data))
+                        if (!handleHandshakeResponse(document))
                         {
                             invokeErrorCallback("Error extracting nonce from handshake response", msg->str);
                         }
@@ -177,11 +180,11 @@ namespace ix
                     }
                     else if (action == "rtm/subscription/data")
                     {
-                        handleSubscriptionData(data);
+                        handleSubscriptionData(document);
                     }
                     else if (action == "rtm/subscribe/ok")
                     {
-                        if (!handleSubscriptionResponse(data))
+                        if (!handleSubscriptionResponse(document))
                         {
                             invokeErrorCallback("Error processing subscribe response", msg->str);
                         }
@@ -192,7 +195,7 @@ namespace ix
                     }
                     else if (action == "rtm/unsubscribe/ok")
                     {
-                        if (!handleUnsubscriptionResponse(data))
+                        if (!handleUnsubscriptionResponse(document))
                         {
                             invokeErrorCallback("Error processing unsubscribe response", msg->str);
                         }
@@ -203,7 +206,7 @@ namespace ix
                     }
                     else if (action == "rtm/publish/ok")
                     {
-                        if (!handlePublishResponse(data))
+                        if (!handlePublishResponse(document))
                         {
                             invokeErrorCallback("Error processing publish response", msg->str);
                         }
@@ -274,17 +277,33 @@ namespace ix
     //
     bool CobraConnection::sendHandshakeMessage()
     {
-        Json::Value data;
-        data["role"] = _roleName;
+        rapidjson::Document pdu;
+        pdu.SetObject();
 
-        Json::Value body;
-        body["data"] = data;
-        body["method"] = "role_secret";
+        rapidjson::Value data;
+        data.SetObject();
+        data.AddMember("role",
+                       rapidjson::StringRef(_roleName.c_str()),
+                       pdu.GetAllocator());
 
-        Json::Value pdu;
-        pdu["action"] = "auth/handshake";
-        pdu["body"] = body;
-        pdu["id"] = Json::UInt64(_id++);
+        rapidjson::Value body;
+        body.SetObject();
+        body.AddMember("data",
+                       data,
+                       pdu.GetAllocator());
+        body.AddMember("method",
+                       "role_secret",
+                       pdu.GetAllocator());
+
+        pdu.AddMember("action",
+                      "auth/handshake",
+                      pdu.GetAllocator());
+        pdu.AddMember("body",
+                      body,
+                      pdu.GetAllocator());
+        pdu.AddMember("id",
+                      _id++,
+                      pdu.GetAllocator());
 
         std::string serializedJson = serializeJson(pdu);
         CobraConnection::invokeTrafficTrackerCallback(serializedJson.size(), false);
@@ -306,22 +325,22 @@ namespace ix
     //     }
     // }
     //
-    bool CobraConnection::handleHandshakeResponse(const Json::Value& pdu)
+    bool CobraConnection::handleHandshakeResponse(const rapidjson::Document& pdu)
     {
-        if (!pdu.isObject()) return false;
+        if (!pdu.IsObject()) return false;
 
-        if (!pdu.isMember("body")) return false;
-        Json::Value body = pdu["body"];
+        if (!pdu.HasMember("body")) return false;
+        const rapidjson::Value& body = pdu["body"];
 
-        if (!body.isMember("data")) return false;
-        Json::Value data = body["data"];
+        if (!body.HasMember("data")) return false;
+        const rapidjson::Value& data = body["data"];
 
-        if (!data.isMember("nonce")) return false;
-        Json::Value nonce = data["nonce"];
+        if (!data.HasMember("nonce")) return false;
+        const rapidjson::Value& nonce = data["nonce"];
 
-        if (!nonce.isString()) return false;
+        if (!nonce.IsString()) return false;
 
-        return sendAuthMessage(nonce.asString());
+        return sendAuthMessage(nonce.GetString());
     }
 
     //
@@ -339,17 +358,33 @@ namespace ix
     //
     bool CobraConnection::sendAuthMessage(const std::string& nonce)
     {
-        Json::Value credentials;
-        credentials["hash"] = hmac(nonce, _roleSecret);
+        rapidjson::Document pdu;
+        pdu.SetObject();
 
-        Json::Value body;
-        body["credentials"] = credentials;
-        body["method"] = "role_secret";
+        rapidjson::Value credentials;
+        credentials.SetObject();
+        credentials.AddMember("hash",
+                              rapidjson::StringRef(hmac(nonce, _roleSecret).c_str()),
+                              pdu.GetAllocator());
 
-        Json::Value pdu;
-        pdu["action"] = "auth/authenticate";
-        pdu["body"] = body;
-        pdu["id"] = Json::UInt64(_id++);
+        rapidjson::Value body;
+        body.SetObject();
+        body.AddMember("credentials",
+                       credentials,
+                       pdu.GetAllocator());
+        body.AddMember("method",
+                       "role_secret",
+                       pdu.GetAllocator());
+
+        pdu.AddMember("action",
+                      "auth/authenticate",
+                      pdu.GetAllocator());
+        pdu.AddMember("body",
+                      body,
+                      pdu.GetAllocator());
+        pdu.AddMember("id",
+                      _id++,
+                      pdu.GetAllocator());
 
         std::string serializedJson = serializeJson(pdu);
         CobraConnection::invokeTrafficTrackerCallback(serializedJson.size(), false);
@@ -357,63 +392,63 @@ namespace ix
         return _webSocket->send(serializedJson).success;
     }
 
-    bool CobraConnection::handleSubscriptionResponse(const Json::Value& pdu)
+    bool CobraConnection::handleSubscriptionResponse(const rapidjson::Document& pdu)
     {
-        if (!pdu.isObject()) return false;
+        if (!pdu.IsObject()) return false;
 
-        if (!pdu.isMember("body")) return false;
-        Json::Value body = pdu["body"];
+        if (!pdu.HasMember("body")) return false;
+        const rapidjson::Value& body = pdu["body"];
 
-        if (!body.isMember("subscription_id")) return false;
-        Json::Value subscriptionId = body["subscription_id"];
+        if (!body.HasMember("subscription_id")) return false;
+        const rapidjson::Value& subscriptionId = body["subscription_id"];
 
-        if (!subscriptionId.isString()) return false;
+        if (!subscriptionId.IsString()) return false;
 
         invokeEventCallback(ix::CobraConnection_EventType_Subscribed,
                             std::string(), WebSocketHttpHeaders(),
-                            subscriptionId.asString());
+                            subscriptionId.GetString());
         return true;
     }
 
-    bool CobraConnection::handleUnsubscriptionResponse(const Json::Value& pdu)
+    bool CobraConnection::handleUnsubscriptionResponse(const rapidjson::Document& pdu)
     {
-        if (!pdu.isObject()) return false;
+        if (!pdu.IsObject()) return false;
 
-        if (!pdu.isMember("body")) return false;
-        Json::Value body = pdu["body"];
+        if (!pdu.HasMember("body")) return false;
+        const rapidjson::Value& body = pdu["body"];
 
-        if (!body.isMember("subscription_id")) return false;
-        Json::Value subscriptionId = body["subscription_id"];
+        if (!body.HasMember("subscription_id")) return false;
+        const rapidjson::Value& subscriptionId = body["subscription_id"];
 
-        if (!subscriptionId.isString()) return false;
+        if (!subscriptionId.IsString()) return false;
 
         invokeEventCallback(ix::CobraConnection_EventType_UnSubscribed,
                             std::string(), WebSocketHttpHeaders(),
-                            subscriptionId.asString());
+                            subscriptionId.GetString());
         return true;
     }
 
-    bool CobraConnection::handleSubscriptionData(const Json::Value& pdu)
+    bool CobraConnection::handleSubscriptionData(const rapidjson::Document& pdu)
     {
-        if (!pdu.isObject()) return false;
+        if (!pdu.IsObject()) return false;
 
-        if (!pdu.isMember("body")) return false;
-        Json::Value body = pdu["body"];
+        if (!pdu.HasMember("body")) return false;
+        const rapidjson::Value& body = pdu["body"];
 
         // Identify subscription_id, so that we can find
         // which callback to execute
-        if (!body.isMember("subscription_id")) return false;
-        Json::Value subscriptionId = body["subscription_id"];
+        if (!body.HasMember("subscription_id")) return false;
+        const rapidjson::Value& subscriptionId = body["subscription_id"];
 
         std::lock_guard<std::mutex> lock(_cbsMutex);
-        auto cb = _cbs.find(subscriptionId.asString());
+        auto cb = _cbs.find(subscriptionId.GetString());
         if (cb == _cbs.end()) return false; // cannot find callback
 
         // Extract messages now
-        if (!body.isMember("messages")) return false;
-        Json::Value messages = body["messages"];
+        if (!body.HasMember("messages")) return false;
+        const rapidjson::Value& messages = body["messages"];
 
-        for (auto&& msg : messages)
+        for (auto&& msg : messages.GetArray())
         {
             cb->second(msg);
         }
@@ -421,16 +456,16 @@ namespace ix
         return true;
     }
 
-    bool CobraConnection::handlePublishResponse(const Json::Value& pdu)
+    bool CobraConnection::handlePublishResponse(const rapidjson::Document& pdu)
     {
-        if (!pdu.isObject()) return false;
+        if (!pdu.IsObject()) return false;
 
-        if (!pdu.isMember("id")) return false;
-        Json::Value id = pdu["id"];
+        if (!pdu.HasMember("id")) return false;
+        const rapidjson::Value& id = pdu["id"];
 
-        if (!id.isUInt64()) return false;
+        if (!id.IsUint64()) return false;
 
-        uint64_t msgId = id.asUInt64();
+        uint64_t msgId = id.GetUint64();
 
         invokeEventCallback(ix::CobraConnection_EventType_Published,
                             std::string(), WebSocketHttpHeaders(),
@@ -457,15 +492,19 @@ namespace ix
         return isConnected() && _authenticated;
     }
 
-    std::string CobraConnection::serializeJson(const Json::Value& value)
+    // Use a mutex so that we don't create a StringBuffer at every serialization
+    std::string CobraConnection::serializeJson(const rapidjson::Document& document)
     {
-        std::lock_guard<std::mutex> lock(_jsonWriterMutex);
-        return _jsonWriter.write(value);
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        document.Accept(writer);
+
+        return buffer.GetString();
     }
 
     std::pair<CobraConnection::MsgId, std::string> CobraConnection::prePublish(
-        const Json::Value& channels,
-        const Json::Value& msg,
+        const std::vector<std::string>& channels,
+        rapidjson::Value& msg,
         bool addToQueue)
     {
         std::lock_guard<std::mutex> lock(_prePublishMutex);
@@ -474,10 +513,18 @@ namespace ix
 
         CobraConnection::MsgId msgId = _id;
 
-        _body["channels"] = channels;
+        rapidjson::Value channelsArray(rapidjson::kArrayType);
+        // FIXME (channels)
+        for (auto&& channel : channels)
+        {
+            channelsArray.PushBack(rapidjson::StringRef(channel.c_str()),
+                                   _pdu.GetAllocator());
+        }
+
+        _body["channels"] = channelsArray;
         _body["message"] = msg;
         _pdu["body"] = _body;
-        _pdu["id"] = Json::UInt64(_id++);
+        _pdu["id"] = _id++;
 
         std::string serializedJson = serializeJson(_pdu);
 
@@ -507,8 +554,8 @@ namespace ix
     //
     // publish is not thread safe as we are trying to reuse some Json objects.
     //
-    CobraConnection::MsgId CobraConnection::publish(const Json::Value& channels,
-                                                    const Json::Value& msg)
+    CobraConnection::MsgId CobraConnection::publish(const std::vector<std::string>& channels,
+                                                    rapidjson::Value& msg)
     {
         auto p = prePublish(channels, msg, false);
         auto msgId = p.first;
@@ -532,51 +579,64 @@ namespace ix
         return msgId;
     }
 
-    void CobraConnection::subscribe(const std::string& channel,
+    bool CobraConnection::subscribe(const std::string& channel,
                                     const std::string& filter,
                                     SubscriptionCallback cb)
     {
+        rapidjson::Document pdu;
+        pdu.SetObject();
+
         // Create and send a subscribe pdu
-        Json::Value body;
-        body["channel"] = channel;
+        rapidjson::Value body;
+        body.SetObject();
+        body.AddMember("channel",
+                       rapidjson::StringRef(channel.c_str()),
+                       pdu.GetAllocator());
 
         if (!filter.empty())
         {
-            body["filter"] = filter;
+            body.AddMember("filter",
+                           rapidjson::StringRef(filter.c_str()),
+                           pdu.GetAllocator());
         }
 
-        Json::Value pdu;
-        pdu["action"] = "rtm/subscribe";
-        pdu["body"] = body;
-        pdu["id"] = Json::UInt64(_id++);
-
-        _webSocket->send(pdu.toStyledString());
+        pdu.AddMember("action",
+                      "rtm/subscribe",
+                      pdu.GetAllocator());
+        pdu.AddMember("body",
+                      body,
+                      pdu.GetAllocator());
+        pdu.AddMember("id",
+                      _id++,
+                      pdu.GetAllocator());
 
         // Set the callback
         std::lock_guard<std::mutex> lock(_cbsMutex);
         _cbs[channel] = cb;
+
+        return _webSocket->send(serializeJson(pdu)).success;
     }
 
-    void CobraConnection::unsubscribe(const std::string& channel)
+    bool CobraConnection::unsubscribe(const std::string& channel)
     {
         {
             std::lock_guard<std::mutex> lock(_cbsMutex);
             auto cb = _cbs.find(channel);
-            if (cb == _cbs.end()) return;
+            if (cb == _cbs.end()) return false;
 
             _cbs.erase(cb);
         }
 
         // Create and send an unsubscribe pdu
-        Json::Value body;
-        body["subscription_id"] = channel;
+        rapidjson::Value body;
+        body["subscription_id"] = rapidjson::StringRef(channel.c_str());
 
-        Json::Value pdu;
+        rapidjson::Document pdu;
         pdu["action"] = "rtm/unsubscribe";
         pdu["body"] = body;
-        pdu["id"] = Json::UInt64(_id++);
+        pdu["id"] = _id++;
 
-        _webSocket->send(pdu.toStyledString());
+        return _webSocket->send(serializeJson(pdu)).success;
     }
 
     //

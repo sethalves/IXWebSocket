@@ -12,7 +12,7 @@ brew:
 	mkdir -p build && (cd build ; cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_TLS=1 -DUSE_WS=1 -DUSE_TEST=1 .. ; make -j 4 install)
 
 ws:
-	mkdir -p build && (cd build ; cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_TLS=1 -DUSE_WS=1 .. ; make -j 4)
+	mkdir -p build && (cd build ; cmake -DCMAKE_BUILD_TYPE=Release -DUSE_TLS=1 -DUSE_WS=1 .. ; make -j 4)
 
 ws_openssl:
 	mkdir -p build && (cd build ; cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_TLS=1 -DUSE_WS=1 -DUSE_OPEN_SSL=1 .. ; make -j 4)
@@ -31,6 +31,9 @@ tag:
 
 xcode:
 	cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_TLS=1 -DUSE_WS=1 -DUSE_TEST=1 -GXcode && open ixwebsocket.xcodeproj
+
+xcode_ws:
+	cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_TLS=1 -DUSE_WS=1 -GXcode && open ixwebsocket.xcodeproj
 
 xcode_openssl:
 	cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_TLS=1 -DUSE_WS=1 -DUSE_TEST=1 -DUSE_OPEN_SSL=1 -GXcode && open ixwebsocket.xcodeproj
@@ -95,6 +98,7 @@ autobahn_report:
 	cp -rvf ~/sandbox/reports/clients/* ../bsergean.github.io/IXWebSocket/autobahn/
 
 # For the fork that is configured with appveyor
+# git remote add upstream <git url>
 rebase_upstream:
 	git fetch upstream
 	git checkout master
