@@ -23,6 +23,11 @@ namespace ix
 
         Json::Value parseLuaStackTrace(const std::string& stack);
 
+        std::pair<HttpResponsePtr, std::string> uploadMinidump(
+            const Json::Value& metadata,
+            const std::string& path,
+            bool verbose);
+
     private:
         int64_t getTimestamp();
         std::string computeAuthHeader();

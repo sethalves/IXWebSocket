@@ -148,4 +148,9 @@ namespace ix
                              const ix::SocketTLSOptions& tlsOptions,
                              const std::string& remoteHost,
                              bool verbose);
+
+    int ws_sentry_minidump_upload(const std::string& dsn,
+                                  const std::string& metadataPath,
+                                  const std::string& minidump,
+                                  bool verbose);
 } // namespace ix

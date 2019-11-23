@@ -204,4 +204,46 @@ namespace ix
 
         return std::make_pair(response, body);
     }
+
+    std::pair<HttpResponsePtr, std::string> SentryClient::uploadMinidump(
+        const Json::Value& metadata,
+        const std::string& path,
+        bool verbose)
+    {
+        auto args = _httpClient.createRequest();
+        args->extraHeaders["X-Sentry-Auth"] = SentryClient::computeAuthHeader();
+        args->connectTimeout = 60;
+        args->transferTimeout = 5 * 60;
+        args->followRedirects = true;
+        args->verbose = verbose;
+        args->logger = [](const std::string& msg) { spdlog::info("request logger: {}", msg); };
+
+        std::string body; // = computePayload(msg);
+        HttpResponsePtr response = _httpClient.post(_url, body, args);
+
+        if (verbose)
+        {
+            for (auto it : response->headers)
+            {
+                spdlog::info("{}: {}", it.first, it.second);
+            }
+
+            spdlog::info("Upload size: {}", response->uploadSize);
+            spdlog::info("Download size: {}", response->downloadSize);
+
+            spdlog::info("Status: {}", response->statusCode);
+            if (response->errorCode != HttpErrorCode::Ok)
+            {
+                spdlog::info("error message: {}", response->errorMsg);
+            }
+
+            if (response->headers["Content-Type"] != "application/octet-stream")
+            {
+                spdlog::info("payload: {}", response->payload);
+            }
+        }
+
+        return std::make_pair(response, body);
+
+    }
 } // namespace ix
