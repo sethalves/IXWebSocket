@@ -231,7 +231,10 @@ if (USE_WS OR USE_TEST)
   add_subdirectory(ixsnake)
   add_subdirectory(ixsentry)
 
-  add_subdirectory(third_party/spdlog spdlog)
+  find_package(SpdLog)
+  if (NOT SPDLOG_FOUND)
+    add_subdirectory(third_party/spdlog spdlog)
+  endif()
 
   if (USE_WS)
       add_subdirectory(ws)

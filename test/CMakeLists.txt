@@ -29,6 +29,11 @@ if (NOT JSONCPP_FOUND)
   set(JSONCPP_SOURCES ../third_party/jsoncpp/jsoncpp.cpp)
 endif()
 
+find_package(SpdLog)
+if (NOT SPDLOG_FOUND)
+  include_directories(ws ../third_party/spdlog/include)
+endif()
+
 # Shared sources
 set (SOURCES
   ${JSONCPP_SOURCES}
@@ -89,6 +94,11 @@ endif()
 if (JSONCPP_FOUND)
   target_include_directories(ixwebsocket_unittest PUBLIC ${JSONCPP_INCLUDE_DIRS})
   target_link_libraries(ixwebsocket_unittest ${JSONCPP_LIBRARIES})
+endif()
+
+if (SPDLOG_FOUND)
+  target_include_directories(ixwebsocket_unittest PUBLIC ${SPDLOG_INCLUDE_DIRS})
+  target_link_libraries(ixwebsocket_unittest ${SPDLOG_LIBRARIES})
 endif()
 
 target_link_libraries(ixwebsocket_unittest ixsnake)

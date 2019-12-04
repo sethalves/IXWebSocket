@@ -22,7 +22,6 @@ include_directories(ws .)
 include_directories(ws ..)
 include_directories(ws ../third_party)
 include_directories(ws ../third_party/statsd-client-cpp/src)
-include_directories(ws ../third_party/spdlog/include)
 include_directories(ws ../third_party/cpp-linenoise)
 
 if (UNIX)
@@ -33,6 +32,11 @@ find_package(JsonCpp)
 if (NOT JSONCPP_FOUND)
   include_directories(../third_party/jsoncpp)
   set(JSONCPP_SOURCES ../third_party/jsoncpp/jsoncpp.cpp)
+endif()
+
+find_package(SpdLog)
+if (NOT SPDLOG_FOUND)
+  include_directories(ws ../third_party/spdlog/include)
 endif()
 
 add_executable(ws 
@@ -83,6 +87,11 @@ endif()
 if (JSONCPP_FOUND)
   target_include_directories(ws PUBLIC ${JSONCPP_INCLUDE_DIRS})
   target_link_libraries(ws ${JSONCPP_LIBRARIES})
+endif()
+
+if (SPDLOG_FOUND)
+  target_include_directories(ws PUBLIC ${SPDLOG_INCLUDE_DIRS})
+  target_link_libraries(ws ${SPDLOG_LIBRARIES})
 endif()
 
 install(TARGETS ws RUNTIME DESTINATION bin)
