@@ -59,7 +59,8 @@ namespace ix
 
     std::pair<bool, std::string> SocketServer::listen()
     {
-        struct sockaddr_in server; // server address information
+        struct sockaddr_storage server; // server address information
+        memset(&server, 0, sizeof(server));
 
         // Get a socket for accepting connections.
         if ((_serverFd = socket(_addressFamily, SOCK_STREAM, 0)) < 0)
@@ -83,10 +84,25 @@ namespace ix
         }
 
         // Bind the socket to the server address.
-        server.sin_family = _addressFamily;
-        server.sin_port = htons(_port);
+        int ret;
+        if (_addressFamily == AF_INET)
+        {
+            struct sockaddr_in *server4 = (struct sockaddr_in*) &server;
+            server4->sin_family = AF_INET;
+            server4->sin_port = htons(_port);
+            ret = inet_pton(_addressFamily, _host.c_str(), &server4->sin_addr);
 
-        if (inet_pton(_addressFamily, _host.c_str(), &server.sin_addr.s_addr) <= 0)
+            server4->sin_addr.s_addr = inet_addr(_host.c_str());
+        }
+        else
+        {
+            struct sockaddr_in6 *server6 = (struct sockaddr_in6*) &server;
+            server6->sin6_family = AF_INET6;
+            server6->sin6_port = htons(_port);
+            ret = inet_pton(_addressFamily, _host.c_str(), &server6->sin6_addr);
+        }
+
+        if (ret != 1)
         {
             std::stringstream ss;
             ss << "SocketServer::listen() error calling inet_pton "
@@ -96,7 +112,7 @@ namespace ix
             return std::make_pair(false, ss.str());
         }
 
-        if (bind(_serverFd, (struct sockaddr*) &server, sizeof(server)) <= 0)
+        if (bind(_serverFd, (struct sockaddr *)&server, sizeof(server)) <= 0)
         {
             std::stringstream ss;
             ss << "SocketServer::listen() error calling bind "
