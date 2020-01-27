@@ -92,7 +92,7 @@ namespace ix
             server4->sin_port = htons(_port);
             ret = inet_pton(_addressFamily, _host.c_str(), &server4->sin_addr);
 
-            server4->sin_addr.s_addr = inet_addr(_host.c_str());
+            // server4->sin_addr.s_addr = inet_addr(_host.c_str());
         }
         else
         {
