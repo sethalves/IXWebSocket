@@ -8,7 +8,7 @@
         
         
         <link rel="shortcut icon" href="../img/favicon.ico">
-        <title>Design - IXWebSocket</title>
+        <title>Packages - IXWebSocket</title>
         <link href="../css/bootstrap.min.css" rel="stylesheet">
         <link href="../css/font-awesome.min.css" rel="stylesheet">
         <link href="../css/base.css" rel="stylesheet">
@@ -42,11 +42,11 @@
                             <li class="navitem">
                                 <a href="../build/" class="nav-link">Build</a>
                             </li>
-                            <li class="navitem active">
-                                <a href="./" class="nav-link">Design</a>
-                            </li>
                             <li class="navitem">
-                                <a href="../packages/" class="nav-link">Packages</a>
+                                <a href="../design/" class="nav-link">Design</a>
+                            </li>
+                            <li class="navitem active">
+                                <a href="./" class="nav-link">Packages</a>
                             </li>
                             <li class="navitem">
                                 <a href="../performance/" class="nav-link">Performance</a>
@@ -66,12 +66,12 @@
                             </a>
                         </li>
                             <li class="nav-item">
-                                <a rel="prev" href="../build/" class="nav-link">
+                                <a rel="prev" href="../design/" class="nav-link">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a rel="next" href="../packages/" class="nav-link">
+                                <a rel="next" href="../performance/" class="nav-link">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -93,17 +93,7 @@
     <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
         <ul class="nav flex-column">
             
-            <li class="nav-item" data-level="2"><a href="#implementation-details" class="nav-link">Implementation details</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            
-            <li class="nav-item" data-level="2"><a href="#limitations" class="nav-link">Limitations</a>
-              <ul class="nav flex-column">
-              </ul>
-            </li>
-            
-            <li class="nav-item" data-level="2"><a href="#c-code-organization" class="nav-link">C++ code organization</a>
+            <li class="nav-item" data-level="2"><a href="#vcpkg" class="nav-link">VCPKG</a>
               <ul class="nav flex-column">
               </ul>
             </li>
@@ -112,70 +102,85 @@
 </div></div>
                     <div class="col-md-9" role="main">
 
-<h2 id="implementation-details">Implementation details</h2>
-<h3 id="per-message-deflate-compression">Per Message Deflate compression.</h3>
-<p>The per message deflate compression option is supported. It can lead to very nice bandbwith savings (20x !) if your messages are similar, which is often the case for example for chat applications. All features of the spec should be supported.</p>
-<h3 id="tlsssl">TLS/SSL</h3>
-<p>Connections can be optionally secured and encrypted with TLS/SSL when using a wss:// endpoint, or using normal un-encrypted socket with ws:// endpoints. AppleSSL is used on iOS and macOS, OpenSSL and mbedTLS can be used on Android, Linux and Windows.</p>
-<p>If you are using OpenSSL, try to be on a version higher than 1.1.x as there there are thread safety problems with 1.0.x.</p>
-<h3 id="polling-and-background-thread-work">Polling and background thread work</h3>
-<p>No manual polling to fetch data is required. Data is sent and received instantly by using a background thread for receiving data and the select <a href="http://man7.org/linux/man-pages/man2/select.2.html">system</a> call to be notified by the OS of incoming data. No timeout is used for select so that the background thread is only woken up when data is available, to optimize battery life. This is also the recommended way of using select according to the select tutorial, section <a href="https://linux.die.net/man/2/select_tut">select law</a>. Read and Writes to the socket are non blocking. Data is sent right away and not enqueued by writing directly to the socket, which is <a href="https://stackoverflow.com/questions/1981372/are-parallel-calls-to-send-recv-on-the-same-socket-valid">possible</a> since system socket implementations allow concurrent read/writes. However concurrent writes need to be protected with mutex.</p>
-<h3 id="automatic-reconnection">Automatic reconnection</h3>
-<p>If the remote end (server) breaks the connection, the code will try to perpetually reconnect, by using an exponential backoff strategy, capped at one retry every 10 seconds. This behavior can be disabled.</p>
-<h3 id="large-messages">Large messages</h3>
-<p>Large frames are broken up into smaller chunks or messages to avoid filling up the os tcp buffers, which is permitted thanks to WebSocket <a href="https://tools.ietf.org/html/rfc6455#section-5.4">fragmentation</a>. Messages up to 1G were sent and received succesfully.</p>
-<h3 id="testing">Testing</h3>
-<p>The library has an interactive tool which is handy for testing compatibility ith other libraries. We have tested our client against Python, Erlang, Node.js, and C++ websocket server libraries.</p>
-<p>The unittest tries to be comprehensive, and has been running on multiple platforms, with different sanitizers such as a thread sanitizer to catch data races or the undefined behavior sanitizer.</p>
-<p>The regression test is running after each commit on github actions for multiple configurations.</p>
-<ul>
-<li>Linux</li>
-<li>macOS with thread sanitizer</li>
-<li>macOS, with OpenSSL, with thread sanitizer</li>
-<li>macOS, with MbedTLS, with thread sanitizer</li>
-<li>Windows, with MbedTLS (the unittest is not run yet)</li>
-</ul>
-<h2 id="limitations">Limitations</h2>
-<ul>
-<li>On some configuration (mostly Android) certificate validation needs to be setup so that SocketTLSOptions.caFile point to a pem file, such as the one distributed by Firefox. Unless that setup is done connecting to a wss endpoint will display an error. With mbedtls the message will contain <code>error in handshake : X509 - Certificate verification failed, e.g. CRL, CA or signature check failed</code>.</li>
-<li>Automatic reconnection works at the TCP socket level, and will detect remote end disconnects. However, if the device/computer network become unreachable (by turning off wifi), it is quite hard to reliably and timely detect it at the socket level using <code>recv</code> and <code>send</code> error codes. <a href="https://stackoverflow.com/questions/14782143/linux-socket-how-to-detect-disconnected-network-in-a-client-program">Here</a> is a good discussion on the subject. This behavior is consistent with other runtimes such as node.js. One way to detect a disconnected device with low level C code is to do a name resolution with DNS but this can be expensive. Mobile devices have good and reliable API to do that.</li>
-<li>The server code is using select to detect incoming data, and creates one OS thread per connection. This is not as scalable as strategies using epoll or kqueue.</li>
-</ul>
-<h2 id="c-code-organization">C++ code organization</h2>
-<p>Here is a simplistic diagram which explains how the code is structured in term of class/modules.</p>
-<pre><code>+-----------------------+ --- Public
-|                       | Start the receiving Background thread. Auto reconnection. Simple websocket Ping.
-|  IXWebSocket          | Interface used by C++ test clients. No IX dependencies.
-|                       |
-+-----------------------+
-|                       |
-|  IXWebSocketServer    | Run a server and give each connections its own WebSocket object.
-|                       | Each connection is handled in a new OS thread.
-|                       |
-+-----------------------+ --- Private
-|                       |
-|  IXWebSocketTransport | Low level websocket code, framing, managing raw socket. Adapted from easywsclient.
-|                       |
-+-----------------------+
-|                       |
-|  IXWebSocketHandshake | Establish the connection between client and server.
-|                       |
-+-----------------------+
-|                       |
-|  IXWebSocket          | ws://  Unencrypted Socket handler
-|  IXWebSocketAppleSSL  | wss:// TLS encrypted Socket AppleSSL handler. Used on iOS and macOS
-|  IXWebSocketOpenSSL   | wss:// TLS encrypted Socket OpenSSL handler.  Used on Android and Linux
-|                       |                                               Can be used on macOS too.
-+-----------------------+
-|                       |
-|  IXSocketConnect      | Connect to the remote host (client).
-|                       |
-+-----------------------+
-|                       |
-|  IXDNSLookup          | Does DNS resolution asynchronously so that it can be interrupted.
-|                       |
-+-----------------------+
-</code></pre></div>
+<p>Notes on how we can update the different packages for ixwebsocket.</p>
+<h2 id="vcpkg">VCPKG</h2>
+<p>Visit the <a href="https://github.com/machinezone/IXWebSocket/releases">releases</a> page on Github. A tag must have been made first.</p>
+<p>Download the latest entry.</p>
+<pre><code>$ cd /tmp
+/tmp$ curl -s -O -L https://github.com/machinezone/IXWebSocket/archive/v9.1.9.tar.gz
+/tmp$
+/tmp$ openssl sha512 v9.1.9.tar.gz
+SHA512(v9.1.9.tar.gz)= f1fd731b5f6a9ce6d6d10bee22a5d9d9baaa8ea0564d6c4cd7eb91dcb88a45c49b2c7fdb75f8640a3589c1b30cee33ef5df8dcbb55920d013394d1e33ddd3c8e
+</code></pre>
+<p>Now go punch those values in the vcpkg ixwebsocket port config files. Here is what the diff look like.</p>
+<pre><code>vcpkg$ git diff
+diff --git a/ports/ixwebsocket/CONTROL b/ports/ixwebsocket/CONTROL
+index db9c2adc9..4acae5c3f 100644
+--- a/ports/ixwebsocket/CONTROL
++++ b/ports/ixwebsocket/CONTROL
+@@ -1,5 +1,5 @@
+ Source: ixwebsocket
+-Version: 8.0.5
++Version: 9.1.9
+ Build-Depends: zlib
+ Homepage: https://github.com/machinezone/IXWebSocket
+ Description: Lightweight WebSocket Client and Server + HTTP Client and Server
+diff --git a/ports/ixwebsocket/portfile.cmake b/ports/ixwebsocket/portfile.cmake
+index de082aece..68e523a05 100644
+--- a/ports/ixwebsocket/portfile.cmake
++++ b/ports/ixwebsocket/portfile.cmake
+@@ -1,8 +1,8 @@
+ vcpkg_from_github(
+     OUT_SOURCE_PATH SOURCE_PATH
+     REPO machinezone/IXWebSocket
+-    REF v8.0.5
+-    SHA512 9dcc20d9a0629b92c62a68a8bd7c8206f18dbd9e93289b0b687ec13c478ce9ad1f3563b38c399c8277b0d3812cc78ca725786ba1dedbc3445b9bdb9b689e8add
++    REF v9.1.9
++    SHA512 f1fd731b5f6a9ce6d6d10bee22a5d9d9baaa8ea0564d6c4cd7eb91dcb88a45c49b2c7fdb75f8640a3589c1b30cee33ef5df8dcbb55920d013394d1e33ddd3c8e
+ )
+</code></pre>
+<p>You will need a fork of the vcpkg repo to make a pull request.</p>
+<pre><code>git fetch upstream
+git co master
+git reset --hard upstream/master
+git push origin master --force
+</code></pre>
+<p>Make the pull request (I use a new branch to do that).</p>
+<pre><code>vcpkg$ git co -b feature/ixwebsocket_9.1.9
+M   ports/ixwebsocket/CONTROL
+M   ports/ixwebsocket/portfile.cmake
+Switched to a new branch 'feature/ixwebsocket_9.1.9'
+vcpkg$
+vcpkg$
+vcpkg$ git commit -am 'ixwebsocket: update to 9.1.9'
+[feature/ixwebsocket_9.1.9 8587a4881] ixwebsocket: update to 9.1.9
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+vcpkg$
+vcpkg$ git push
+fatal: The current branch feature/ixwebsocket_9.1.9 has no upstream branch.
+To push the current branch and set the remote as upstream, use
+
+    git push --set-upstream origin feature/ixwebsocket_9.1.9
+
+vcpkg$ git push --set-upstream origin feature/ixwebsocket_9.1.9
+
+Enumerating objects: 11, done.
+Counting objects: 100% (11/11), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (6/6), done.
+Writing objects: 100% (6/6), 621 bytes | 621.00 KiB/s, done.
+Total 6 (delta 4), reused 0 (delta 0)
+remote: Resolving deltas: 100% (4/4), completed with 4 local objects.
+remote:
+remote: Create a pull request for 'feature/ixwebsocket_9.1.9' on GitHub by visiting:
+remote:      https://github.com/bsergean/vcpkg/pull/new/feature/ixwebsocket_9.1.9
+remote:
+To https://github.com/bsergean/vcpkg.git
+ * [new branch]          feature/ixwebsocket_9.1.9 -&gt; feature/ixwebsocket_9.1.9
+Branch 'feature/ixwebsocket_9.1.9' set up to track remote branch 'feature/ixwebsocket_9.1.9' from 'origin' by rebasing.
+vcpkg$
+</code></pre>
+<p>Just visit this url, https://github.com/bsergean/vcpkg/pull/new/feature/ixwebsocket_9.1.9, printed on the console, to make the pull request.</p></div>
             </div>
         </div>
 

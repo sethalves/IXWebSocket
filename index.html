@@ -9,79 +9,69 @@
         
         <link rel="shortcut icon" href="img/favicon.ico">
         <title>IXWebSocket</title>
-        <link href="css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="css/bootstrap.min.css" rel="stylesheet">
         <link href="css/font-awesome.min.css" rel="stylesheet">
         <link href="css/base.css" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
-        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
-            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-            <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-        <![endif]-->
 
         <script src="js/jquery-1.10.2.min.js" defer></script>
-        <script src="js/bootstrap-3.0.3.min.js" defer></script>
+        <script src="js/bootstrap.min.js" defer></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
         <script>hljs.initHighlightingOnLoad();</script> 
     </head>
 
     <body class="homepage">
-
-        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
             <div class="container">
-
-                <!-- Collapsed navigation -->
-                <div class="navbar-header">
-                    <!-- Expander button -->
-                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                    <a class="navbar-brand" href=".">IXWebSocket</a>
-                </div>
+                <a class="navbar-brand" href=".">IXWebSocket</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
                 <!-- Expanded navigation -->
-                <div class="navbar-collapse collapse">
+                <div id="navbar-collapse" class="navbar-collapse collapse">
                         <!-- Main navigation -->
                         <ul class="nav navbar-nav">
-                            <li class="active">
-                                <a href=".">Home</a>
+                            <li class="navitem active">
+                                <a href="." class="nav-link">Home</a>
                             </li>
-                            <li >
-                                <a href="CHANGELOG/">Changelog</a>
+                            <li class="navitem">
+                                <a href="CHANGELOG/" class="nav-link">Changelog</a>
                             </li>
-                            <li >
-                                <a href="build/">Build</a>
+                            <li class="navitem">
+                                <a href="build/" class="nav-link">Build</a>
                             </li>
-                            <li >
-                                <a href="cobra/">Cobra</a>
+                            <li class="navitem">
+                                <a href="design/" class="nav-link">Design</a>
                             </li>
-                            <li >
-                                <a href="design/">Design</a>
+                            <li class="navitem">
+                                <a href="packages/" class="nav-link">Packages</a>
                             </li>
-                            <li >
-                                <a href="usage/">Examples</a>
+                            <li class="navitem">
+                                <a href="performance/" class="nav-link">Performance</a>
                             </li>
-                            <li >
-                                <a href="ws/">Ws</a>
+                            <li class="navitem">
+                                <a href="usage/" class="nav-link">Examples</a>
+                            </li>
+                            <li class="navitem">
+                                <a href="ws/" class="nav-link">Ws</a>
                             </li>
                         </ul>
 
-                    <ul class="nav navbar-nav navbar-right">
-                        <li>
-                            <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                    <ul class="nav navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-toggle="modal" data-target="#mkdocs_search_modal">
                                 <i class="fa fa-search"></i> Search
                             </a>
                         </li>
-                            <li class="disabled">
-                                <a rel="next" >
+                            <li class="nav-item">
+                                <a rel="prev" class="nav-link disabled">
                                     <i class="fa fa-arrow-left"></i> Previous
                                 </a>
                             </li>
-                            <li >
-                                <a rel="prev" href="CHANGELOG/">
+                            <li class="nav-item">
+                                <a rel="next" href="CHANGELOG/" class="nav-link">
                                     Next <i class="fa fa-arrow-right"></i>
                                 </a>
                             </li>
@@ -91,17 +81,47 @@
         </div>
 
         <div class="container">
-                <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
-    <ul class="nav bs-sidenav">
-        <li class="main active"><a href="#introduction">Introduction</a></li>
-        <li class="main "><a href="#example-code">Example code</a></li>
-        <li class="main "><a href="#why-another-library">Why another library?</a></li>
-        <li class="main "><a href="#contributing">Contributing</a></li>
-    </ul>
-</div></div>
-                <div class="col-md-9" role="main">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-light navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-toggle="collapse" data-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
 
-<p><img alt="Alt text" src="https://travis-ci.org/machinezone/IXWebSocket.svg?branch=master" /></p>
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-secondary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-level="2"><a href="#introduction" class="nav-link">Introduction</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="2"><a href="#example-code" class="nav-link">Example code</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="2"><a href="#why-another-library" class="nav-link">Why another library?</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="2"><a href="#alternative-libraries" class="nav-link">Alternative libraries</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            
+            <li class="nav-item" data-level="2"><a href="#contributing" class="nav-link">Contributing</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
 <h2 id="introduction">Introduction</h2>
 <p><a href="https://en.wikipedia.org/wiki/WebSocket"><em>WebSocket</em></a> is a computer communications protocol, providing full-duplex and bi-directionnal communication channels over a single TCP connection. <em>IXWebSocket</em> is a C++ library for client and server Websocket communication, and for client and server HTTP communication. <em>TLS</em> aka <em>SSL</em> is supported. The code is derived from <a href="https://github.com/dhbaird/easywsclient">easywsclient</a> and from the <a href="https://github.com/satori-com/satori-rtm-sdk-c">Satori C SDK</a>. It has been tested on the following platforms.</p>
 <ul>
@@ -113,7 +133,7 @@
 <li>FreeBSD</li>
 </ul>
 <h2 id="example-code">Example code</h2>
-<pre><code class="cpp">// Required on Windows
+<pre><code class="language-c++">// Required on Windows
 ix::initNetSystem();
 
 // Our websocket object
@@ -138,12 +158,27 @@ webSocket.start();
 // Send a message to the server (default to TEXT mode)
 webSocket.send(&quot;hello world&quot;);
 </code></pre>
-
 <h2 id="why-another-library">Why another library?</h2>
 <p>There are 2 main reasons that explain why IXWebSocket got written. First, we needed a C++ cross-platform client library, which should have few dependencies. What looked like the most solid one, <a href="https://github.com/zaphoyd/websocketpp">websocketpp</a> did depend on boost and this was not an option for us. Secondly, there were other available libraries with fewer dependencies (C ones), but they required calling an explicit poll routine periodically to know if a client had received data from a server, which was not elegant.</p>
-<p>We started by solving those 2 problems, then we added server websocket code, then an HTTP client, and finally a very simple HTTP server.</p>
+<p>We started by solving those 2 problems, then we added server websocket code, then an HTTP client, and finally a very simple HTTP server. IXWebSocket comes with a command line utility named ws which is quite handy, and is now packaged with alpine linux. You can install it with <code>apk add ws</code>.</p>
+<ul>
+<li>Few dependencies (only zlib)</li>
+<li>Simple to use ; uses std::string and std::function callbacks.</li>
+<li>Complete support of the websocket protocol, and basic http support.</li>
+<li>Client and Server</li>
+<li>TLS support</li>
+</ul>
+<h2 id="alternative-libraries">Alternative libraries</h2>
+<p>There are plenty of great websocket libraries out there, which might work for you. Here are a couple of serious ones.</p>
+<ul>
+<li><a href="https://github.com/zaphoyd/websocketpp">websocketpp</a> - C++</li>
+<li><a href="https://github.com/boostorg/beast">beast</a> - C++</li>
+<li><a href="https://libwebsockets.org/">libwebsockets</a> - C</li>
+<li><a href="https://github.com/uNetworking/uWebSockets">µWebSockets</a> - C</li>
+</ul>
 <h2 id="contributing">Contributing</h2>
 <p>IXWebSocket is developed on <a href="https://github.com/machinezone/IXWebSocket">GitHub</a>. We'd love to hear about how you use it; opening up an issue on GitHub is ok for that. If things don't work as expected, please create an issue on GitHub, or even better a pull request if you know how to fix your problem.</p></div>
+            </div>
         </div>
 
         <footer class="col-md-12">
@@ -157,21 +192,21 @@ webSocket.send(&quot;hello world&quot;);
         <script src="js/base.js" defer></script>
         <script src="search/main.js" defer></script>
 
-        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
-    <div class="modal-dialog">
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                <h4 class="modal-title" id="exampleModalLabel">Search</h4>
             </div>
             <div class="modal-body">
                 <p>
                     From here you can search these documents. Enter
                     your search terms below.
                 </p>
-                <form role="form">
+                <form>
                     <div class="form-group">
-                        <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
                     </div>
                 </form>
                 <div id="mkdocs-search-results"></div>
@@ -180,12 +215,12 @@ webSocket.send(&quot;hello world&quot;);
             </div>
         </div>
     </div>
-</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="Keyboard Shortcuts Modal" aria-hidden="true">
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                <h4 class="modal-title" id="exampleModalLabel">Keyboard Shortcuts</h4>
             </div>
             <div class="modal-body">
               <table class="table">
@@ -225,6 +260,6 @@ webSocket.send(&quot;hello world&quot;);
 </html>
 
 <!--
-MkDocs version : 1.0.4
-Build Date UTC : 2020-01-24 05:54:47
+MkDocs version : 1.1.2
+Build Date UTC : 2021-05-19 16:32:02.214096+00:00
 -->
